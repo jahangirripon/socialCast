@@ -17,7 +17,7 @@
 	$password = ""; // password
 	$password2 = ""; // password2
 	$date = ""; // signup date
-	$error_array = ""; // error_array
+	$error_array = []; // error_array
 
 	if(isset($_POST['register_button']))
 	{
@@ -84,7 +84,7 @@
 
 		else 
 		{
-			echo 'Emails dont match!';
+			array_push($error_array, 'Emails dont match!');
 		}
 
 
@@ -103,7 +103,7 @@
 			if($password != $password2)
 
 			{
-				echo "Password does not match!";
+				array_push($error_array, "Password does not match!");
 			} else {
 				if(preg_match('/^A-Za-z0-9/', $password)) {
 					array_push($error_array, "Your pass can only contain english letters and numbers<br>");
@@ -111,10 +111,53 @@
 			}
 
 		if(strlen($password) > 30 || strlen($password) < 5)
+		{
+				array_push($error_array, "Password must be between 5 and 30 chars!<br>");
+		}
 
-			{
-				array_push($error_array, "Last password must be between 5 and 30 chars!<br>");
-			}
+		if(empty($error_array)) {
+			$password = md5($password); //encrypt password
+
+			// generate username
+			$username = strtolower($fname."_".$lname);
+			$check_username_query = mysqli_query($con, "SELECT username from users WHERE username='$username' ");
+
+				// count no of rows returns
+				$num_rows = mysqli_num_rows($check_username_query);
+
+				$i = 0;
+				// if username exists, add number to username
+
+				while(mysqli_num_rows($check_username_query) != 0) {
+					$i++; // add 1 to i
+					$username = $username.'_'.$i;
+					$check_username_query = mysqli_query($con, "SELECT 	username FROM users WHERE username='$username' ");
+
+				}
+
+				// profile picture
+				$rand = rand(1,2);
+
+				if($rand == 1)
+					$profile_pic = "assets/images/profile_pics/defaults/creative.png";
+				 else if ($rand == 2)  
+					$profile_pic = "assets/images/profile_pics/defaults/target.png";
+
+				$query = mysqli_query($con, "INSERT INTO users VALUES ('', '$fname', '$lname', '$username','$em', '$password', '$data', '$profile_pic', '0', '0' 'no', ',' )");
+
+				array_push($error_array, "<span> All set, login now! </span><br>");
+
+				// clear session variables
+				$_SESSION['reg_fname'] = "";
+				$_SESSION['reg_lname'] = "";
+				$_SESSION['reg_email'] = "";
+				$_SESSION['reg_email2'] = "";
+
+
+				// $query = mysqli_query($con, "INSERT INTO users (first_name, last_name, username, email, password, signup_date, profile_pic, num_posts, num_likes, user_closed, friend_array) VALUES ('', '$fname', '$lname', '$username','$em', '$password', '$data', '$profile_pic', '0', '0' 'no', ',' )");
+
+				
+		}
 
 	}
 
@@ -127,44 +170,81 @@
 </head>
 <body>
 	<form action="register.php" method="POST">
-		<input type="text" name="reg_fname" placeholder="First Name" value="
-		<?php
-			if(isset($_SESSION['reg_fname'])) {
-				echo $_SESSION['reg_fname'];
-			}
+
+
+		<input type="text" name="reg_fname" placeholder="First Name" value="<?php
+			if(isset($_SESSION['reg_fname'])) {echo $_SESSION['reg_fname'];}
 		?>" required>
 		<br>
-		<input type="text" name="reg_lname" placeholder="Last Name" value="
 		<?php
+			if(in_array("First name must be between 2 and 25 chars!<br>",  $error_array)) {
+				echo "First name must be between 2 and 25 chars!<br>";
+			}
+		?>
+
+
+		<input type="text" name="reg_lname" placeholder="Last Name" value="<?php
 			if(isset($_SESSION['reg_lname'])) {
 				echo $_SESSION['reg_lname'];
 			}
 		?>" required>
 		<br>
-
-		<input type="text" name="reg_email" placeholder="E-mail" value="
 		<?php
+			if(in_array("Last name must be between 2 and 25 chars!<br>", $error_array)) {
+				echo "Last name must be between 2 and 25 chars!<br>";
+			}
+		?>
+
+
+		<input type="text" name="reg_email" placeholder="E-mail" value="<?php
 			if(isset($_SESSION['reg_email'])) {
 				echo $_SESSION['reg_email'];
 			}
 		?>" required>
 		<br>
-		<input type="text" name="reg_email2" placeholder="Confirm email" value="
 		<?php
+			if(in_array("Email already in use<br>", $error_array)) {
+				echo "Email already in use<br>";
+			}
+		?>
+
+
+		<input type="text" name="reg_email2" placeholder="Confirm email" value="<?php
 			if(isset($_SESSION['reg_email2'])) {
 				echo $_SESSION['reg_email2'];
 			}
 		?>" required>
 		<br>
+		<?php
+			if(in_array("Email already in use<br>", $error_array)) {
+				echo "Email already in use<br>";
+			}
+		?>
 
 		<input type="password" name="reg_password" placeholder="Password" required>
 		<br>
-		<input type="text" name="reg_password2" placeholder="Confirm password" required>
+		<?php
+			if(in_array("Email already in use<br>", $error_array)) {
+				echo "Email already in use<br>";
+			}
+		?>
+
+
+		<input type="password" name="reg_password2" placeholder="Confirm password" required>
 		<br>
+		<?php
+			if(in_array("Password must be between 5 and 30 chars!<br>", $error_array)) {
+				echo "Password must be between 5 and 30 chars!<br>";
+			}
+		?>
 
 		<input type="submit" name="register_button" value="Register">
-
-
+		
+		<?php
+			if(in_array("<span> All set, login now! </span><br>", $error_array)) {
+				echo "<span> All set, login now! </span><br>";
+			}
+		?>
 
 	</form>
 </body>
