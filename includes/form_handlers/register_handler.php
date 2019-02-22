@@ -154,6 +154,7 @@
 		}
 
 		$username = strtolower($fname."_".$lname); 
+		$profile_pic = "assets/images/profile_pics/defaults/creative.png";
 
 		$query = mysqli_query($con, "INSERT INTO users 
 			(id, first_name, last_name, username, email, password, signup_date, profile_pic, num_posts, num_likes, user_closed, friend_array) 
